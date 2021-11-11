@@ -1,10 +1,15 @@
 package com.ad.almenzarjimenezsergio.palabrascodelab.view;
 
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -19,8 +24,9 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 public class MainActivity extends AppCompatActivity {
     public static final String TAG = "jamaica";
-    public static final int NEW_WORD_ACTIVITY_REQUEST_CODE = 1;
+    //public static final int NEW_WORD_ACTIVITY_REQUEST_CODE = 1;
     private WordViewModel mWordViewModel;
+    private ActivityResultLauncher<Intent> launcher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,13 +49,33 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         FloatingActionButton fab = findViewById(R.id.fab);
+        launcher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                new ActivityResultCallback<ActivityResult>() {
+                    @Override
+                    public void onActivityResult(ActivityResult result) {
+                        if (result.getResultCode() == Activity.RESULT_OK) {
+                            // There are no request codes
+                            Intent data = result.getData();
+                            Word word =  new Word(data.getStringExtra("word"));
+                            mWordViewModel.insert(word);
+                        } else {
+                            Toast.makeText(
+                                    getApplicationContext(),
+                                    R.string.empty_not_saved,
+                                    Toast.LENGTH_LONG).show();
+                        }
+                    }
+                });
+
         fab.setOnClickListener( view -> {
-            Intent intent = new Intent(MainActivity.this, NewWordActivity.class);
-            startActivityForResult(intent, NEW_WORD_ACTIVITY_REQUEST_CODE);
+                    Intent intent = new Intent(this, NewWordActivity.class);
+                    launcher.launch(intent);
+            //startActivityForResult(intent, NEW_WORD_ACTIVITY_REQUEST_CODE);
         });
         //mWordViewModel.littleInsert(); HACER LUEGO PARA INSERTAR LAS PALABRAS
     }
-
+/*
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
@@ -63,7 +89,7 @@ public class MainActivity extends AppCompatActivity {
                     Toast.LENGTH_LONG).show();
         }
     }
-
+ */
 
 
 }
